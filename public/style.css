@@ -1,0 +1,284 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+}
+
+.container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    max-width: 600px;
+    width: 100%;
+    margin: 20px;
+}
+
+h1 {
+    text-align: center;
+    color: #667eea;
+    margin-bottom: 30px;
+    font-size: 2.5em;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.screen {
+    animation: fadeIn 0.3s ease-in;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.btn-primary {
+    background: #667eea;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #5a67d8;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+#waiting-screen {
+    text-align: center;
+}
+
+#waiting-message {
+    margin-top: 30px;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    margin: 20px auto;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.game-info {
+    margin-bottom: 30px;
+}
+
+.scores {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.score-box {
+    background: #f7fafc;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    flex: 1;
+}
+
+.score-box h3 {
+    color: #667eea;
+    margin-bottom: 10px;
+}
+
+.score-box span {
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #333;
+}
+
+.round-info {
+    text-align: center;
+}
+
+.round-info p {
+    margin: 5px 0;
+    color: #666;
+}
+
+.choices {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.choice-btn {
+    background: #f7fafc;
+    border: 3px solid transparent;
+    border-radius: 16px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.choice-btn:hover {
+    border-color: #667eea;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.choice-icon {
+    font-size: 3em;
+}
+
+.choice-btn span:last-child {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #333;
+}
+
+#waiting-for-opponent {
+    text-align: center;
+    padding: 40px;
+}
+
+.result-choices {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+    margin: 30px 0;
+}
+
+.result-choice {
+    text-align: center;
+}
+
+.result-choice h3 {
+    color: #667eea;
+    margin-bottom: 15px;
+}
+
+.choice-result {
+    font-size: 4em;
+    display: block;
+}
+
+.vs {
+    font-size: 2em;
+    font-weight: bold;
+    color: #999;
+}
+
+#round-winner {
+    font-size: 2em;
+    text-align: center;
+    margin-top: 20px;
+}
+
+#round-winner.win {
+    color: #48bb78;
+}
+
+#round-winner.lose {
+    color: #f56565;
+}
+
+#round-winner.tie {
+    color: #ed8936;
+}
+
+#game-result {
+    font-size: 3em;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#game-result.win {
+    color: #48bb78;
+}
+
+#game-result.lose {
+    color: #f56565;
+}
+
+.final-scores {
+    text-align: center;
+    font-size: 1.3em;
+    margin-bottom: 30px;
+    color: #666;
+}
+
+#game-over-screen, #disconnected-screen {
+    text-align: center;
+}
+
+#disconnected-screen p {
+    margin: 20px 0;
+    color: #666;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 20px;
+    }
+    
+    h1 {
+        font-size: 2em;
+    }
+    
+    .choices {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .choice-btn {
+        width: 100%;
+    }
+    
+    .result-choices {
+        gap: 20px;
+    }
+    
+    .choice-result {
+        font-size: 3em;
+    }
+}

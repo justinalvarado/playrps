@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Play RPS - Rock Paper Scissors</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Rock Paper Scissors</h1>
+        
+        <div id="waiting-screen" class="screen">
+            <h2>Welcome to Play RPS!</h2>
+            <button id="find-game-btn" class="btn btn-primary">Find Game</button>
+            <div id="waiting-message" class="hidden">
+                <p>Waiting for opponent...</p>
+                <div class="spinner"></div>
+            </div>
+        </div>
+
+        <div id="game-screen" class="screen hidden">
+            <div class="game-info">
+                <div class="scores">
+                    <div class="score-box">
+                        <h3>You</h3>
+                        <span id="player-score">0</span>
+                    </div>
+                    <div class="round-info">
+                        <p>Round <span id="round-number">1</span></p>
+                        <p>First to 3 wins!</p>
+                    </div>
+                    <div class="score-box">
+                        <h3>Opponent</h3>
+                        <span id="opponent-score">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="game-area">
+                <div id="choices-area">
+                    <h2>Make your choice:</h2>
+                    <div class="choices">
+                        <button class="choice-btn" data-choice="rock">
+                            <span class="choice-icon">✊</span>
+                            <span>Rock</span>
+                        </button>
+                        <button class="choice-btn" data-choice="paper">
+                            <span class="choice-icon">✋</span>
+                            <span>Paper</span>
+                        </button>
+                        <button class="choice-btn" data-choice="scissors">
+                            <span class="choice-icon">✌️</span>
+                            <span>Scissors</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="waiting-for-opponent" class="hidden">
+                    <p>Waiting for opponent's choice...</p>
+                    <div class="spinner"></div>
+                </div>
+
+                <div id="round-result" class="hidden">
+                    <div class="result-choices">
+                        <div class="result-choice">
+                            <h3>You</h3>
+                            <span id="player-choice-result" class="choice-result"></span>
+                        </div>
+                        <div class="vs">VS</div>
+                        <div class="result-choice">
+                            <h3>Opponent</h3>
+                            <span id="opponent-choice-result" class="choice-result"></span>
+                        </div>
+                    </div>
+                    <h2 id="round-winner"></h2>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-over-screen" class="screen hidden">
+            <h2 id="game-result"></h2>
+            <div class="final-scores">
+                <p>Final Score: <span id="final-player-score">0</span> - <span id="final-opponent-score">0</span></p>
+            </div>
+            <button id="play-again-btn" class="btn btn-primary">Play Again</button>
+        </div>
+
+        <div id="disconnected-screen" class="screen hidden">
+            <h2>Opponent Disconnected</h2>
+            <p>Your opponent has left the game.</p>
+            <button id="return-home-btn" class="btn btn-primary">Find New Game</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
