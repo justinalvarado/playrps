@@ -4,11 +4,16 @@ A real-time multiplayer Rock Paper Scissors game built with Node.js and Socket.i
 
 ## Features
 
-- Real-time multiplayer gameplay
-- Automatic matchmaking
-- First to 3 rounds wins
-- Clean, responsive UI
-- Handles player disconnections
+- **Player Avatars**: Choose from 12 different emoji avatars
+- **Multiple Game Modes**:
+  - Quick Match: Random opponent matchmaking
+  - Private Rooms: Create/join games with 6-character room codes
+  - Direct Challenges: Challenge specific online players
+- **Lobby System**: See who's online and available to play
+- **Real-time Gameplay**: Instant updates via Socket.io
+- **First to 3 Wins**: Best of 5 format
+- **Clean, Responsive UI**: Works on desktop and mobile
+- **Disconnect Handling**: Graceful handling when players leave
 
 ## How to Run
 
@@ -32,12 +37,15 @@ A real-time multiplayer Rock Paper Scissors game built with Node.js and Socket.i
    http://localhost:3000
    ```
 
-4. To play:
-   - Open two browser windows/tabs
-   - Click "Find Game" in both windows
-   - Players will be automatically matched
-   - Choose rock, paper, or scissors
-   - First to win 3 rounds wins the game!
+## How to Play
+
+1. **Choose Your Avatar**: Select an emoji that represents you
+2. **Join a Game**:
+   - **Quick Match**: Click "Find Random Opponent" for automatic matchmaking
+   - **Private Room**: Create a room and share the 6-character code with a friend
+   - **Challenge**: Click "Challenge" next to any online player
+3. **Play**: Choose rock, paper, or scissors each round
+4. **Win**: First player to win 3 rounds wins the match!
 
 ## Game Rules
 

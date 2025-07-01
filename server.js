@@ -11,15 +11,27 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const games = new Map();
 const waitingPlayers = [];
+const players = new Map();
+const rooms = new Map();
 
-function createGame(player1, player2) {
+function generateRoomCode() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+}
+
+function createGame(player1Id, player2Id, roomCode = null) {
     const gameId = Math.random().toString(36).substring(7);
     games.set(gameId, {
         id: gameId,
-        players: [player1, player2],
+        players: [player1Id, player2Id],
         choices: {},
-        scores: { [player1]: 0, [player2]: 0 },
-        round: 1
+        scores: { [player1Id]: 0, [player2Id]: 0 },
+        round: 1,
+        roomCode
     });
     return gameId;
 }
@@ -36,24 +48,61 @@ function determineWinner(choice1, choice2) {
     return 'player2';
 }
 
+function getOnlinePlayers(excludeId) {
+    const onlinePlayers = [];
+    for (const [id, player] of players.entries()) {
+        if (id !== excludeId && !player.inGame) {
+            onlinePlayers.push({
+                id,
+                avatar: player.avatar
+            });
+        }
+    }
+    return onlinePlayers;
+}
+
 io.on('connection', (socket) => {
     console.log('New player connected:', socket.id);
 
+    socket.on('setAvatar', (avatar) => {
+        players.set(socket.id, {
+            id: socket.id,
+            avatar,
+            inGame: false
+        });
+        
+        socket.emit('avatarSet', { id: socket.id });
+        
+        // Broadcast updated player list to all clients
+        io.emit('onlinePlayersUpdate', getOnlinePlayers());
+    });
+
     socket.on('findGame', () => {
+        const player = players.get(socket.id);
+        if (!player) return;
+
         if (waitingPlayers.length > 0) {
             const opponentId = waitingPlayers.pop();
             const opponent = io.sockets.sockets.get(opponentId);
             
-            if (opponent) {
+            if (opponent && players.get(opponentId)) {
                 const gameId = createGame(socket.id, opponentId);
+                
+                players.get(socket.id).inGame = true;
+                players.get(opponentId).inGame = true;
                 
                 socket.join(gameId);
                 opponent.join(gameId);
                 
                 io.to(gameId).emit('gameFound', {
                     gameId,
-                    players: [socket.id, opponentId]
+                    players: [
+                        { id: socket.id, avatar: players.get(socket.id).avatar },
+                        { id: opponentId, avatar: players.get(opponentId).avatar }
+                    ]
                 });
+                
+                io.emit('onlinePlayersUpdate', getOnlinePlayers());
             } else {
                 // Opponent disconnected, try again
                 socket.emit('findGame');
@@ -61,6 +110,113 @@ io.on('connection', (socket) => {
         } else {
             waitingPlayers.push(socket.id);
             socket.emit('waiting');
+        }
+    });
+
+    socket.on('createRoom', () => {
+        const player = players.get(socket.id);
+        if (!player) return;
+
+        const roomCode = generateRoomCode();
+        rooms.set(roomCode, {
+            host: socket.id,
+            players: [socket.id],
+            full: false
+        });
+        
+        socket.join(roomCode);
+        socket.emit('roomCreated', { roomCode });
+    });
+
+    socket.on('joinRoom', (roomCode) => {
+        const player = players.get(socket.id);
+        if (!player) return;
+
+        const room = rooms.get(roomCode);
+        if (!room) {
+            socket.emit('roomError', { message: 'Room not found' });
+            return;
+        }
+
+        if (room.full) {
+            socket.emit('roomError', { message: 'Room is full' });
+            return;
+        }
+
+        room.players.push(socket.id);
+        room.full = true;
+        socket.join(roomCode);
+
+        const hostId = room.host;
+        const gameId = createGame(hostId, socket.id, roomCode);
+        
+        players.get(hostId).inGame = true;
+        players.get(socket.id).inGame = true;
+
+        io.to(roomCode).emit('gameFound', {
+            gameId,
+            players: [
+                { id: hostId, avatar: players.get(hostId).avatar },
+                { id: socket.id, avatar: players.get(socket.id).avatar }
+            ]
+        });
+
+        rooms.delete(roomCode);
+        io.emit('onlinePlayersUpdate', getOnlinePlayers());
+    });
+
+    socket.on('cancelRoom', (roomCode) => {
+        rooms.delete(roomCode);
+        socket.leave(roomCode);
+    });
+
+    socket.on('challengePlayer', (targetId) => {
+        const challenger = players.get(socket.id);
+        const target = players.get(targetId);
+        
+        if (!challenger || !target || target.inGame) {
+            socket.emit('challengeError', { message: 'Player not available' });
+            return;
+        }
+
+        io.to(targetId).emit('challengeReceived', {
+            challengerId: socket.id,
+            challengerAvatar: challenger.avatar
+        });
+    });
+
+    socket.on('acceptChallenge', (challengerId) => {
+        const acceptor = players.get(socket.id);
+        const challenger = players.get(challengerId);
+        
+        if (!acceptor || !challenger) return;
+
+        const gameId = createGame(challengerId, socket.id);
+        
+        players.get(challengerId).inGame = true;
+        players.get(socket.id).inGame = true;
+
+        const challengerSocket = io.sockets.sockets.get(challengerId);
+        if (challengerSocket) {
+            challengerSocket.join(gameId);
+            socket.join(gameId);
+
+            io.to(gameId).emit('gameFound', {
+                gameId,
+                players: [
+                    { id: challengerId, avatar: challenger.avatar },
+                    { id: socket.id, avatar: acceptor.avatar }
+                ]
+            });
+
+            io.emit('onlinePlayersUpdate', getOnlinePlayers());
+        }
+    });
+
+    socket.on('cancelWaiting', () => {
+        const waitingIndex = waitingPlayers.findIndex(id => id === socket.id);
+        if (waitingIndex !== -1) {
+            waitingPlayers.splice(waitingIndex, 1);
         }
     });
 
@@ -99,7 +255,16 @@ io.on('connection', (socket) => {
                     winner,
                     scores: game.scores
                 });
+                
+                // Mark players as not in game
+                game.players.forEach(playerId => {
+                    if (players.get(playerId)) {
+                        players.get(playerId).inGame = false;
+                    }
+                });
+                
                 games.delete(gameId);
+                io.emit('onlinePlayersUpdate', getOnlinePlayers());
             } else {
                 setTimeout(() => {
                     io.to(gameId).emit('nextRound', { round: game.round });
@@ -114,12 +279,31 @@ io.on('connection', (socket) => {
             waitingPlayers.splice(waitingIndex, 1);
         }
 
+        // Clean up rooms
+        for (const [code, room] of rooms.entries()) {
+            if (room.host === socket.id) {
+                rooms.delete(code);
+            }
+        }
+
+        // Handle game disconnection
         for (const [gameId, game] of games.entries()) {
             if (game.players.includes(socket.id)) {
                 io.to(gameId).emit('playerDisconnected');
+                
+                // Mark other player as not in game
+                game.players.forEach(playerId => {
+                    if (players.get(playerId)) {
+                        players.get(playerId).inGame = false;
+                    }
+                });
+                
                 games.delete(gameId);
             }
         }
+
+        players.delete(socket.id);
+        io.emit('onlinePlayersUpdate', getOnlinePlayers());
     });
 });
 

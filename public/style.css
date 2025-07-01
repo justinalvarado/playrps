@@ -256,6 +256,180 @@ h2 {
     }
 }
 
+/* Setup Screen */
+.emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin: 30px 0;
+}
+
+.emoji-btn {
+    background: #f7fafc;
+    border: 3px solid transparent;
+    border-radius: 12px;
+    padding: 15px;
+    font-size: 2.5em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.emoji-btn:hover {
+    border-color: #667eea;
+    transform: scale(1.1);
+}
+
+.emoji-btn.selected {
+    border-color: #667eea;
+    background: #e6ecff;
+}
+
+#selected-avatar {
+    text-align: center;
+    margin-top: 30px;
+}
+
+#selected-avatar p {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+}
+
+#player-avatar {
+    font-size: 2em;
+}
+
+/* Lobby Screen */
+.player-info {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #f7fafc;
+    border-radius: 12px;
+}
+
+#lobby-player-avatar {
+    font-size: 3em;
+    display: block;
+    margin-bottom: 10px;
+}
+
+#player-id {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.lobby-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.lobby-section {
+    background: #f7fafc;
+    padding: 25px;
+    border-radius: 12px;
+}
+
+.lobby-section h3 {
+    color: #667eea;
+    margin-bottom: 20px;
+}
+
+.room-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.join-room {
+    display: flex;
+    gap: 10px;
+}
+
+#room-code-input {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1.1em;
+    text-transform: uppercase;
+}
+
+.btn-secondary {
+    background: #e2e8f0;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background: #cbd5e0;
+}
+
+#room-info {
+    text-align: center;
+    margin-top: 20px;
+}
+
+#room-code-display {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #667eea;
+    letter-spacing: 2px;
+}
+
+#online-players-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.online-player {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    background: white;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.online-player:hover {
+    background: #e6ecff;
+}
+
+.online-player-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.online-player-avatar {
+    font-size: 1.5em;
+}
+
+.challenge-btn {
+    padding: 5px 15px;
+    font-size: 0.9em;
+}
+
+/* Updated Game Screen */
+.player-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+#game-player-avatar, #game-opponent-avatar {
+    font-size: 2em;
+}
+
+/* Waiting Screen Updates */
+#cancel-waiting-btn {
+    margin-top: 20px;
+}
+
 @media (max-width: 480px) {
     .container {
         padding: 20px;

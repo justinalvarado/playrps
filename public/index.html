@@ -10,12 +10,68 @@
     <div class="container">
         <h1>Rock Paper Scissors</h1>
         
-        <div id="waiting-screen" class="screen">
-            <h2>Welcome to Play RPS!</h2>
-            <button id="find-game-btn" class="btn btn-primary">Find Game</button>
-            <div id="waiting-message" class="hidden">
+        <div id="setup-screen" class="screen">
+            <h2>Choose Your Avatar</h2>
+            <div class="emoji-grid">
+                <button class="emoji-btn" data-emoji="😊">😊</button>
+                <button class="emoji-btn" data-emoji="😎">😎</button>
+                <button class="emoji-btn" data-emoji="🤖">🤖</button>
+                <button class="emoji-btn" data-emoji="👽">👽</button>
+                <button class="emoji-btn" data-emoji="🦄">🦄</button>
+                <button class="emoji-btn" data-emoji="🐸">🐸</button>
+                <button class="emoji-btn" data-emoji="🦁">🦁</button>
+                <button class="emoji-btn" data-emoji="🐼">🐼</button>
+                <button class="emoji-btn" data-emoji="🦊">🦊</button>
+                <button class="emoji-btn" data-emoji="🐵">🐵</button>
+                <button class="emoji-btn" data-emoji="🎭">🎭</button>
+                <button class="emoji-btn" data-emoji="🎯">🎯</button>
+            </div>
+            <div id="selected-avatar" class="hidden">
+                <p>Your avatar: <span id="player-avatar"></span></p>
+                <button id="continue-btn" class="btn btn-primary">Continue</button>
+            </div>
+        </div>
+        
+        <div id="lobby-screen" class="screen hidden">
+            <div class="player-info">
+                <span id="lobby-player-avatar"></span>
+                <span id="player-id"></span>
+            </div>
+            
+            <div class="lobby-sections">
+                <div class="lobby-section">
+                    <h3>Quick Match</h3>
+                    <button id="find-game-btn" class="btn btn-primary">Find Random Opponent</button>
+                </div>
+                
+                <div class="lobby-section">
+                    <h3>Private Game</h3>
+                    <div class="room-controls">
+                        <button id="create-room-btn" class="btn btn-secondary">Create Room</button>
+                        <div class="join-room">
+                            <input type="text" id="room-code-input" placeholder="Enter room code" maxlength="6">
+                            <button id="join-room-btn" class="btn btn-secondary">Join Room</button>
+                        </div>
+                    </div>
+                    <div id="room-info" class="hidden">
+                        <p>Room Code: <span id="room-code-display"></span></p>
+                        <p>Share this code with your friend!</p>
+                        <button id="cancel-room-btn" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </div>
+                
+                <div class="lobby-section">
+                    <h3>Online Players</h3>
+                    <div id="online-players-list"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="waiting-screen" class="screen hidden">
+            <div id="waiting-message">
                 <p>Waiting for opponent...</p>
                 <div class="spinner"></div>
+                <button id="cancel-waiting-btn" class="btn btn-secondary">Cancel</button>
             </div>
         </div>
 
@@ -23,7 +79,10 @@
             <div class="game-info">
                 <div class="scores">
                     <div class="score-box">
-                        <h3>You</h3>
+                        <div class="player-display">
+                            <span id="game-player-avatar"></span>
+                            <h3>You</h3>
+                        </div>
                         <span id="player-score">0</span>
                     </div>
                     <div class="round-info">
@@ -31,7 +90,10 @@
                         <p>First to 3 wins!</p>
                     </div>
                     <div class="score-box">
-                        <h3>Opponent</h3>
+                        <div class="player-display">
+                            <span id="game-opponent-avatar"></span>
+                            <h3>Opponent</h3>
+                        </div>
                         <span id="opponent-score">0</span>
                     </div>
                 </div>
