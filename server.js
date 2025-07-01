@@ -41,18 +41,25 @@ io.on('connection', (socket) => {
 
     socket.on('findGame', () => {
         if (waitingPlayers.length > 0) {
-            const opponent = waitingPlayers.pop();
-            const gameId = createGame(socket.id, opponent.id);
+            const opponentId = waitingPlayers.pop();
+            const opponent = io.sockets.sockets.get(opponentId);
             
-            socket.join(gameId);
-            opponent.join(gameId);
-            
-            io.to(gameId).emit('gameFound', {
-                gameId,
-                players: [socket.id, opponent.id]
-            });
+            if (opponent) {
+                const gameId = createGame(socket.id, opponentId);
+                
+                socket.join(gameId);
+                opponent.join(gameId);
+                
+                io.to(gameId).emit('gameFound', {
+                    gameId,
+                    players: [socket.id, opponentId]
+                });
+            } else {
+                // Opponent disconnected, try again
+                socket.emit('findGame');
+            }
         } else {
-            waitingPlayers.push(socket);
+            waitingPlayers.push(socket.id);
             socket.emit('waiting');
         }
     });
@@ -102,7 +109,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        const waitingIndex = waitingPlayers.findIndex(p => p.id === socket.id);
+        const waitingIndex = waitingPlayers.findIndex(id => id === socket.id);
         if (waitingIndex !== -1) {
             waitingPlayers.splice(waitingIndex, 1);
         }
