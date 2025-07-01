@@ -439,6 +439,16 @@ h2 {
         font-size: 2em;
     }
     
+    .emoji-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+    
+    .emoji-btn {
+        font-size: 2em;
+        padding: 10px;
+    }
+    
     .choices {
         flex-direction: column;
         gap: 15px;
@@ -454,5 +464,13 @@ h2 {
     
     .choice-result {
         font-size: 3em;
+    }
+    
+    .join-room {
+        flex-direction: column;
+    }
+    
+    .lobby-section {
+        padding: 15px;
     }
 }
