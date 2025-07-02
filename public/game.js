@@ -184,53 +184,76 @@ function startChoiceTimer() {
     }, 1000);
 }
 
-// Wait for DOM to be ready
+// Wait for DOM to be ready and set up event listeners
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded, re-selecting elements');
-    // Re-select elements after DOM is loaded
-    elements.continueBtn = document.getElementById('continue-btn');
-    elements.playerNameInput = document.getElementById('player-name-input');
-    console.log('After DOM load - Continue button:', !!elements.continueBtn);
-    console.log('After DOM load - Name input:', !!elements.playerNameInput);
-});
-
-// Setup screen
-function checkProfileComplete() {
-    const name = elements.playerNameInput.value.trim();
-    if (name && playerAvatar) {
-        elements.selectedName.textContent = name;
-        elements.playerAvatarDisplay.textContent = playerAvatar;
-        elements.selectedProfile.classList.remove('hidden');
-    } else {
-        elements.selectedProfile.classList.add('hidden');
+    console.log('DOM loaded, setting up event listeners');
+    
+    const continueBtn = document.getElementById('continue-btn');
+    const nameInput = document.getElementById('player-name-input');
+    const emojiButtons = document.querySelectorAll('.emoji-btn');
+    
+    console.log('Elements found:', {
+        continueBtn: !!continueBtn,
+        nameInput: !!nameInput,
+        emojiButtons: emojiButtons.length
+    });
+    
+    if (continueBtn) {
+        continueBtn.addEventListener('click', (e) => {
+            console.log('Continue clicked!');
+            e.preventDefault();
+            
+            const name = nameInput ? nameInput.value.trim() : '';
+            console.log('Name value:', name, 'Avatar:', playerAvatar);
+            
+            if (playerAvatar && name) {
+                playerName = name;
+                localStorage.setItem('playerAvatar', playerAvatar);
+                localStorage.setItem('playerName', playerName);
+                console.log('Emitting setProfile');
+                socket.emit('setProfile', { avatar: playerAvatar, name: playerName, gameMode: selectedGameMode });
+            } else {
+                console.log('Missing data - Name:', name, 'Avatar:', playerAvatar);
+                alert('Please enter your name and select an avatar');
+            }
+        });
     }
-}
-
-elements.playerNameInput.addEventListener('input', checkProfileComplete);
-
-elements.emojiButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-        elements.emojiButtons.forEach(b => b.classList.remove('selected'));
-        btn.classList.add('selected');
-        playerAvatar = btn.dataset.emoji;
-        checkProfileComplete();
+    
+    // Set up name input listener
+    if (nameInput) {
+        nameInput.addEventListener('input', () => {
+            const name = nameInput.value.trim();
+            const selectedProfile = document.getElementById('selected-profile');
+            const selectedName = document.getElementById('selected-name');
+            const playerAvatarDisplay = document.getElementById('player-avatar');
+            
+            if (name && playerAvatar && selectedProfile && selectedName && playerAvatarDisplay) {
+                selectedName.textContent = name;
+                playerAvatarDisplay.textContent = playerAvatar;
+                selectedProfile.classList.remove('hidden');
+            } else if (selectedProfile) {
+                selectedProfile.classList.add('hidden');
+            }
+        });
+    }
+    
+    // Set up emoji button listeners
+    emojiButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            emojiButtons.forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            playerAvatar = btn.dataset.emoji;
+            console.log('Avatar selected:', playerAvatar);
+            
+            // Trigger profile check
+            if (nameInput) {
+                nameInput.dispatchEvent(new Event('input'));
+            }
+        });
     });
 });
 
-elements.continueBtn.addEventListener('click', () => {
-    console.log('Continue button clicked');
-    const name = elements.playerNameInput.value.trim();
-    console.log('Name:', name, 'Avatar:', playerAvatar);
-    if (playerAvatar && name) {
-        playerName = name;
-        localStorage.setItem('playerAvatar', playerAvatar);
-        localStorage.setItem('playerName', playerName);
-        console.log('Emitting setProfile');
-        socket.emit('setProfile', { avatar: playerAvatar, name: playerName, gameMode: selectedGameMode });
-    } else {
-        console.log('Missing name or avatar');
-    }
-});
+// Old setup code removed - now handled in DOMContentLoaded
 
 // Lobby screen
 elements.modeButtons.forEach(btn => {
