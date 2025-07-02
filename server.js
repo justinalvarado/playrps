@@ -37,6 +37,11 @@ function createGame(player1Id, player2Id, roomCode = null) {
 }
 
 function determineWinner(choice1, choice2) {
+    // Handle null choices (timeouts)
+    if (choice1 === null && choice2 === null) return 'tie';
+    if (choice1 === null) return 'player2';
+    if (choice2 === null) return 'player1';
+    
     if (choice1 === choice2) return 'tie';
     if (
         (choice1 === 'rock' && choice2 === 'scissors') ||
@@ -148,12 +153,24 @@ io.on('connection', (socket) => {
         socket.join(roomCode);
 
         const hostId = room.host;
+        const hostSocket = io.sockets.sockets.get(hostId);
+        
+        if (!hostSocket) {
+            socket.emit('roomError', { message: 'Host has disconnected' });
+            rooms.delete(roomCode);
+            return;
+        }
+        
         const gameId = createGame(hostId, socket.id, roomCode);
         
         players.get(hostId).inGame = true;
         players.get(socket.id).inGame = true;
+        
+        // Both players need to join the gameId room
+        hostSocket.join(gameId);
+        socket.join(gameId);
 
-        io.to(roomCode).emit('gameFound', {
+        io.to(gameId).emit('gameFound', {
             gameId,
             players: [
                 { id: hostId, avatar: players.get(hostId).avatar },

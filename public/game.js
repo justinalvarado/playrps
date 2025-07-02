@@ -2,8 +2,10 @@ const socket = io();
 
 let currentGame = null;
 let playerChoice = null;
-let playerAvatar = null;
+let playerAvatar = localStorage.getItem('playerAvatar') || null;
 let playerId = null;
+let countdownInterval = null;
+let choiceTimeout = null;
 
 const screens = {
     setup: document.getElementById('setup-screen'),
@@ -24,6 +26,7 @@ const elements = {
     // Lobby screen
     lobbyPlayerAvatar: document.getElementById('lobby-player-avatar'),
     playerIdDisplay: document.getElementById('player-id'),
+    editAvatarBtn: document.getElementById('edit-avatar-btn'),
     findGameBtn: document.getElementById('find-game-btn'),
     createRoomBtn: document.getElementById('create-room-btn'),
     joinRoomBtn: document.getElementById('join-room-btn'),
@@ -37,6 +40,10 @@ const elements = {
     cancelWaitingBtn: document.getElementById('cancel-waiting-btn'),
     
     // Game screen
+    countdownAnimation: document.getElementById('countdown-animation'),
+    countdownText: document.getElementById('countdown-text'),
+    timerDisplay: document.getElementById('timer-display'),
+    countdownTimer: document.querySelector('.countdown-timer'),
     gamePlayerAvatar: document.getElementById('game-player-avatar'),
     gameOpponentAvatar: document.getElementById('game-opponent-avatar'),
     playerScore: document.getElementById('player-score'),
@@ -70,9 +77,16 @@ function showScreen(screenName) {
     screens[screenName].classList.remove('hidden');
 }
 
+// Check if user already has an avatar
+if (playerAvatar) {
+    socket.emit('setAvatar', playerAvatar);
+}
+
 function resetGame() {
     currentGame = null;
     playerChoice = null;
+    clearInterval(countdownInterval);
+    clearTimeout(choiceTimeout);
     elements.playerScore.textContent = '0';
     elements.opponentScore.textContent = '0';
     elements.roundNumber.textContent = '1';
@@ -80,6 +94,57 @@ function resetGame() {
     elements.waitingForOpponent.classList.add('hidden');
     elements.roundResult.classList.add('hidden');
     showScreen('lobby');
+}
+
+function showCountdownAnimation(callback) {
+    const words = ['Rock', 'Paper', 'Scissors', 'Shoot!'];
+    let index = 0;
+    
+    elements.countdownAnimation.classList.remove('hidden');
+    elements.choicesArea.classList.add('hidden');
+    
+    const interval = setInterval(() => {
+        elements.countdownText.textContent = words[index];
+        elements.countdownText.style.animation = 'none';
+        // Trigger reflow
+        void elements.countdownText.offsetWidth;
+        elements.countdownText.style.animation = 'pulse 0.5s ease-in-out';
+        
+        index++;
+        if (index >= words.length) {
+            clearInterval(interval);
+            setTimeout(() => {
+                elements.countdownAnimation.classList.add('hidden');
+                callback();
+            }, 500);
+        }
+    }, 600);
+}
+
+function startChoiceTimer() {
+    let timeLeft = 5;
+    elements.timerDisplay.textContent = timeLeft;
+    elements.countdownTimer.classList.remove('warning');
+    
+    countdownInterval = setInterval(() => {
+        timeLeft--;
+        elements.timerDisplay.textContent = timeLeft;
+        
+        if (timeLeft <= 2) {
+            elements.countdownTimer.classList.add('warning');
+        }
+        
+        if (timeLeft <= 0) {
+            clearInterval(countdownInterval);
+            // Auto-submit no choice (will lose)
+            if (!playerChoice) {
+                socket.emit('makeChoice', {
+                    gameId: currentGame.gameId,
+                    choice: null
+                });
+            }
+        }
+    }, 1000);
 }
 
 // Setup screen
@@ -95,6 +160,7 @@ elements.emojiButtons.forEach(btn => {
 
 elements.continueBtn.addEventListener('click', () => {
     if (playerAvatar) {
+        localStorage.setItem('playerAvatar', playerAvatar);
         socket.emit('setAvatar', playerAvatar);
     }
 });
@@ -131,14 +197,29 @@ elements.cancelWaitingBtn.addEventListener('click', () => {
     showScreen('lobby');
 });
 
+elements.editAvatarBtn.addEventListener('click', () => {
+    showScreen('setup');
+    // Pre-select current avatar
+    elements.emojiButtons.forEach(btn => {
+        btn.classList.remove('selected');
+        if (btn.dataset.emoji === playerAvatar) {
+            btn.classList.add('selected');
+        }
+    });
+    elements.playerAvatarDisplay.textContent = playerAvatar;
+    elements.selectedAvatar.classList.remove('hidden');
+});
+
 // Game screen
 document.querySelectorAll('.choice-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         if (!currentGame || playerChoice) return;
         
         playerChoice = btn.dataset.choice;
+        clearInterval(countdownInterval);
         elements.choicesArea.classList.add('hidden');
         elements.waitingForOpponent.classList.remove('hidden');
+        startChoiceTimer();
         
         socket.emit('makeChoice', {
             gameId: currentGame.gameId,
@@ -220,12 +301,18 @@ socket.on('gameFound', (game) => {
     elements.gameOpponentAvatar.textContent = opponent.avatar;
     
     showScreen('game');
-    elements.choicesArea.classList.remove('hidden');
     elements.waitingForOpponent.classList.add('hidden');
     elements.roundResult.classList.add('hidden');
+    
+    // Start with countdown animation
+    showCountdownAnimation(() => {
+        elements.choicesArea.classList.remove('hidden');
+    });
 });
 
 socket.on('roundResult', (result) => {
+    clearInterval(countdownInterval);
+    
     const isPlayer1 = currentGame.players[0].id === socket.id;
     const playerScore = isPlayer1 ? result.scores[currentGame.players[0].id] : result.scores[currentGame.players[1].id];
     const opponentScore = isPlayer1 ? result.scores[currentGame.players[1].id] : result.scores[currentGame.players[0].id];
@@ -237,8 +324,8 @@ socket.on('roundResult', (result) => {
     const opponentId = currentGame.players.find(p => p.id !== socket.id).id;
     const opponentChoiceDisplay = result.choices[opponentId];
     
-    elements.playerChoiceResult.textContent = choiceEmojis[playerChoiceDisplay];
-    elements.opponentChoiceResult.textContent = choiceEmojis[opponentChoiceDisplay];
+    elements.playerChoiceResult.textContent = choiceEmojis[playerChoiceDisplay] || '❌';
+    elements.opponentChoiceResult.textContent = choiceEmojis[opponentChoiceDisplay] || '❌';
     
     if (!result.winner) {
         elements.roundWinner.textContent = "It's a tie!";
@@ -258,8 +345,11 @@ socket.on('roundResult', (result) => {
 socket.on('nextRound', (data) => {
     playerChoice = null;
     elements.roundNumber.textContent = data.round;
-    elements.choicesArea.classList.remove('hidden');
     elements.roundResult.classList.add('hidden');
+    
+    showCountdownAnimation(() => {
+        elements.choicesArea.classList.remove('hidden');
+    });
 });
 
 socket.on('gameOver', (result) => {

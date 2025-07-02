@@ -36,6 +36,7 @@
             <div class="player-info">
                 <span id="lobby-player-avatar"></span>
                 <span id="player-id"></span>
+                <button id="edit-avatar-btn" class="btn btn-secondary">Change Avatar</button>
             </div>
             
             <div class="lobby-sections">
@@ -76,6 +77,10 @@
         </div>
 
         <div id="game-screen" class="screen hidden">
+            <div id="countdown-animation" class="hidden">
+                <h1 id="countdown-text"></h1>
+            </div>
+            
             <div class="game-info">
                 <div class="scores">
                     <div class="score-box">
@@ -120,7 +125,9 @@
 
                 <div id="waiting-for-opponent" class="hidden">
                     <p>Waiting for opponent's choice...</p>
-                    <div class="spinner"></div>
+                    <div class="countdown-timer">
+                        <span id="timer-display">5</span>
+                    </div>
                 </div>
 
                 <div id="round-result" class="hidden">
