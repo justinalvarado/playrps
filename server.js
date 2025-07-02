@@ -31,7 +31,8 @@ function createGame(player1Id, player2Id, roomCode = null) {
         choices: {},
         scores: { [player1Id]: 0, [player2Id]: 0 },
         round: 1,
-        roomCode
+        roomCode,
+        readyForNext: new Set()
     });
     return gameId;
 }
@@ -282,11 +283,24 @@ io.on('connection', (socket) => {
                 
                 games.delete(gameId);
                 io.emit('onlinePlayersUpdate', getOnlinePlayers());
-            } else {
-                setTimeout(() => {
-                    io.to(gameId).emit('nextRound', { round: game.round });
-                }, 3000);
             }
+        }
+    });
+
+    socket.on('readyForNextRound', ({ gameId }) => {
+        const game = games.get(gameId);
+        if (!game) return;
+
+        game.readyForNext.add(socket.id);
+
+        if (game.readyForNext.size === 2) {
+            // Both players ready, start next round
+            game.readyForNext.clear();
+            io.to(gameId).emit('nextRound', { round: game.round });
+        } else {
+            // Let other player know someone is ready
+            const waitingPlayerId = game.players.find(id => id !== socket.id);
+            io.to(waitingPlayerId).emit('opponentReady');
         }
     });
 

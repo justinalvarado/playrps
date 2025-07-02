@@ -23,7 +23,7 @@
                 <button class="emoji-btn" data-emoji="🐼">🐼</button>
                 <button class="emoji-btn" data-emoji="🦊">🦊</button>
                 <button class="emoji-btn" data-emoji="🐵">🐵</button>
-                <button class="emoji-btn" data-emoji="🎭">🎭</button>
+                <button class="emoji-btn" data-emoji="🐨">🐨</button>
                 <button class="emoji-btn" data-emoji="🎯">🎯</button>
             </div>
             <div id="selected-avatar" class="hidden">
@@ -76,12 +76,12 @@
             </div>
         </div>
 
-        <div id="game-screen" class="screen hidden">
-            <div id="countdown-animation" class="hidden">
-                <h1 id="countdown-text"></h1>
-            </div>
-            
+        <div id="game-screen" class="screen hidden">            
             <div class="game-info">
+                <div class="round-info">
+                    <p>Round <span id="round-number">1</span></p>
+                    <p>First to 3 wins!</p>
+                </div>
                 <div class="scores">
                     <div class="score-box">
                         <div class="player-display">
@@ -89,10 +89,6 @@
                             <h3>You</h3>
                         </div>
                         <span id="player-score">0</span>
-                    </div>
-                    <div class="round-info">
-                        <p>Round <span id="round-number">1</span></p>
-                        <p>First to 3 wins!</p>
                     </div>
                     <div class="score-box">
                         <div class="player-display">
@@ -143,6 +139,13 @@
                         </div>
                     </div>
                     <h2 id="round-winner"></h2>
+                    <div class="next-round-controls">
+                        <button id="next-round-btn" class="btn btn-primary">Ready for Next Round</button>
+                        <div id="waiting-for-next" class="hidden">
+                            <p>Waiting for opponent to be ready...</p>
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

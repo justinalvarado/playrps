@@ -40,8 +40,6 @@ const elements = {
     cancelWaitingBtn: document.getElementById('cancel-waiting-btn'),
     
     // Game screen
-    countdownAnimation: document.getElementById('countdown-animation'),
-    countdownText: document.getElementById('countdown-text'),
     timerDisplay: document.getElementById('timer-display'),
     countdownTimer: document.querySelector('.countdown-timer'),
     gamePlayerAvatar: document.getElementById('game-player-avatar'),
@@ -55,6 +53,8 @@ const elements = {
     playerChoiceResult: document.getElementById('player-choice-result'),
     opponentChoiceResult: document.getElementById('opponent-choice-result'),
     roundWinner: document.getElementById('round-winner'),
+    nextRoundBtn: document.getElementById('next-round-btn'),
+    waitingForNext: document.getElementById('waiting-for-next'),
     
     // Game over screen
     gameResult: document.getElementById('game-result'),
@@ -96,30 +96,6 @@ function resetGame() {
     showScreen('lobby');
 }
 
-function showCountdownAnimation(callback) {
-    const words = ['Rock', 'Paper', 'Scissors', 'Shoot!'];
-    let index = 0;
-    
-    elements.countdownAnimation.classList.remove('hidden');
-    elements.choicesArea.classList.add('hidden');
-    
-    const interval = setInterval(() => {
-        elements.countdownText.textContent = words[index];
-        elements.countdownText.style.animation = 'none';
-        // Trigger reflow
-        void elements.countdownText.offsetWidth;
-        elements.countdownText.style.animation = 'pulse 0.5s ease-in-out';
-        
-        index++;
-        if (index >= words.length) {
-            clearInterval(interval);
-            setTimeout(() => {
-                elements.countdownAnimation.classList.add('hidden');
-                callback();
-            }, 500);
-        }
-    }, 600);
-}
 
 function startChoiceTimer() {
     let timeLeft = 5;
@@ -228,6 +204,12 @@ document.querySelectorAll('.choice-btn').forEach(btn => {
     });
 });
 
+elements.nextRoundBtn.addEventListener('click', () => {
+    elements.nextRoundBtn.classList.add('hidden');
+    elements.waitingForNext.classList.remove('hidden');
+    socket.emit('readyForNextRound', { gameId: currentGame.gameId });
+});
+
 elements.playAgainBtn.addEventListener('click', resetGame);
 elements.returnHomeBtn.addEventListener('click', resetGame);
 
@@ -303,11 +285,7 @@ socket.on('gameFound', (game) => {
     showScreen('game');
     elements.waitingForOpponent.classList.add('hidden');
     elements.roundResult.classList.add('hidden');
-    
-    // Start with countdown animation
-    showCountdownAnimation(() => {
-        elements.choicesArea.classList.remove('hidden');
-    });
+    elements.choicesArea.classList.remove('hidden');
 });
 
 socket.on('roundResult', (result) => {
@@ -340,16 +318,15 @@ socket.on('roundResult', (result) => {
     
     elements.waitingForOpponent.classList.add('hidden');
     elements.roundResult.classList.remove('hidden');
+    elements.nextRoundBtn.classList.remove('hidden');
+    elements.waitingForNext.classList.add('hidden');
 });
 
 socket.on('nextRound', (data) => {
     playerChoice = null;
     elements.roundNumber.textContent = data.round;
     elements.roundResult.classList.add('hidden');
-    
-    showCountdownAnimation(() => {
-        elements.choicesArea.classList.remove('hidden');
-    });
+    elements.choicesArea.classList.remove('hidden');
 });
 
 socket.on('gameOver', (result) => {
@@ -364,6 +341,12 @@ socket.on('gameOver', (result) => {
     elements.finalOpponentScore.textContent = opponentScore;
     
     showScreen('gameOver');
+});
+
+socket.on('opponentReady', () => {
+    if (elements.waitingForNext.classList.contains('hidden')) {
+        elements.waitingForNext.querySelector('p').textContent = 'Opponent is ready! Tap when you\'re ready.';
+    }
 });
 
 socket.on('playerDisconnected', () => {
