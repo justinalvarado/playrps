@@ -94,14 +94,18 @@ function showScreen(screenName) {
     screens[screenName].classList.remove('hidden');
 }
 
-// Check if user already has profile
-if (playerAvatar && playerName) {
-    socket.emit('setProfile', { avatar: playerAvatar, name: playerName, gameMode: selectedGameMode });
-} else {
-    // Pre-fill saved name if exists
-    if (playerName) {
-        elements.playerNameInput.value = playerName;
-    }
+// Always start with setup screen for now
+// Pre-fill saved data if exists
+if (playerName) {
+    elements.playerNameInput.value = playerName;
+}
+if (playerAvatar) {
+    // Pre-select the saved avatar
+    elements.emojiButtons.forEach(btn => {
+        if (btn.dataset.emoji === playerAvatar) {
+            btn.classList.add('selected');
+        }
+    });
 }
 
 // Debug: Check if elements are found
@@ -179,6 +183,16 @@ function startChoiceTimer() {
         }
     }, 1000);
 }
+
+// Wait for DOM to be ready
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, re-selecting elements');
+    // Re-select elements after DOM is loaded
+    elements.continueBtn = document.getElementById('continue-btn');
+    elements.playerNameInput = document.getElementById('player-name-input');
+    console.log('After DOM load - Continue button:', !!elements.continueBtn);
+    console.log('After DOM load - Name input:', !!elements.playerNameInput);
+});
 
 // Setup screen
 function checkProfileComplete() {
