@@ -104,6 +104,10 @@ if (playerAvatar && playerName) {
     }
 }
 
+// Debug: Check if elements are found
+console.log('Continue button found:', !!elements.continueBtn);
+console.log('Name input found:', !!elements.playerNameInput);
+
 function createConfetti() {
     elements.confettiContainer.innerHTML = '';
     for (let i = 0; i < 50; i++) {
@@ -200,12 +204,17 @@ elements.emojiButtons.forEach(btn => {
 });
 
 elements.continueBtn.addEventListener('click', () => {
+    console.log('Continue button clicked');
     const name = elements.playerNameInput.value.trim();
+    console.log('Name:', name, 'Avatar:', playerAvatar);
     if (playerAvatar && name) {
         playerName = name;
         localStorage.setItem('playerAvatar', playerAvatar);
         localStorage.setItem('playerName', playerName);
+        console.log('Emitting setProfile');
         socket.emit('setProfile', { avatar: playerAvatar, name: playerName, gameMode: selectedGameMode });
+    } else {
+        console.log('Missing name or avatar');
     }
 });
 
