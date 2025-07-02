@@ -23,7 +23,7 @@ function generateRoomCode() {
     return code;
 }
 
-function createGame(player1Id, player2Id, roomCode = null) {
+function createGame(player1Id, player2Id, gameMode = '3', roomCode = null) {
     const gameId = Math.random().toString(36).substring(7);
     games.set(gameId, {
         id: gameId,
@@ -31,6 +31,7 @@ function createGame(player1Id, player2Id, roomCode = null) {
         choices: {},
         scores: { [player1Id]: 0, [player2Id]: 0 },
         round: 1,
+        gameMode,
         roomCode,
         readyForNext: new Set()
     });
@@ -60,7 +61,8 @@ function getOnlinePlayers(excludeId) {
         if (id !== excludeId && !player.inGame) {
             onlinePlayers.push({
                 id,
-                avatar: player.avatar
+                avatar: player.avatar,
+                name: player.name
             });
         }
     }
@@ -70,14 +72,16 @@ function getOnlinePlayers(excludeId) {
 io.on('connection', (socket) => {
     console.log('New player connected:', socket.id);
 
-    socket.on('setAvatar', (avatar) => {
+    socket.on('setProfile', ({ avatar, name, gameMode }) => {
         players.set(socket.id, {
             id: socket.id,
             avatar,
+            name,
+            gameMode,
             inGame: false
         });
         
-        socket.emit('avatarSet', { id: socket.id });
+        socket.emit('profileSet', { id: socket.id });
         
         // Broadcast updated player list to all clients
         io.emit('onlinePlayersUpdate', getOnlinePlayers());

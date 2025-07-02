@@ -3,9 +3,19 @@ const socket = io();
 let currentGame = null;
 let playerChoice = null;
 let playerAvatar = localStorage.getItem('playerAvatar') || null;
+let playerName = localStorage.getItem('playerName') || null;
 let playerId = null;
 let countdownInterval = null;
 let choiceTimeout = null;
+let selectedGameMode = '3';
+let playerStats = JSON.parse(localStorage.getItem('playerStats')) || {
+    gamesPlayed: 0,
+    wins: 0,
+    losses: 0,
+    rockCount: 0,
+    paperCount: 0,
+    scissorsCount: 0
+};
 
 const screens = {
     setup: document.getElementById('setup-screen'),
@@ -18,15 +28,18 @@ const screens = {
 
 const elements = {
     // Setup screen
+    playerNameInput: document.getElementById('player-name-input'),
     emojiButtons: document.querySelectorAll('.emoji-btn'),
-    selectedAvatar: document.getElementById('selected-avatar'),
+    selectedProfile: document.getElementById('selected-profile'),
+    selectedName: document.getElementById('selected-name'),
     playerAvatarDisplay: document.getElementById('player-avatar'),
     continueBtn: document.getElementById('continue-btn'),
     
     // Lobby screen
     lobbyPlayerAvatar: document.getElementById('lobby-player-avatar'),
-    playerIdDisplay: document.getElementById('player-id'),
-    editAvatarBtn: document.getElementById('edit-avatar-btn'),
+    lobbyPlayerName: document.getElementById('lobby-player-name'),
+    editProfileBtn: document.getElementById('edit-profile-btn'),
+    modeButtons: document.querySelectorAll('.mode-btn'),
     findGameBtn: document.getElementById('find-game-btn'),
     createRoomBtn: document.getElementById('create-room-btn'),
     joinRoomBtn: document.getElementById('join-room-btn'),
@@ -43,7 +56,9 @@ const elements = {
     timerDisplay: document.getElementById('timer-display'),
     countdownTimer: document.querySelector('.countdown-timer'),
     gamePlayerAvatar: document.getElementById('game-player-avatar'),
+    gamePlayerName: document.getElementById('game-player-name'),
     gameOpponentAvatar: document.getElementById('game-opponent-avatar'),
+    gameOpponentName: document.getElementById('game-opponent-name'),
     playerScore: document.getElementById('player-score'),
     opponentScore: document.getElementById('opponent-score'),
     roundNumber: document.getElementById('round-number'),
@@ -57,9 +72,11 @@ const elements = {
     waitingForNext: document.getElementById('waiting-for-next'),
     
     // Game over screen
+    confettiContainer: document.getElementById('confetti-container'),
     gameResult: document.getElementById('game-result'),
     finalPlayerScore: document.getElementById('final-player-score'),
     finalOpponentScore: document.getElementById('final-opponent-score'),
+    rematchBtn: document.getElementById('rematch-btn'),
     playAgainBtn: document.getElementById('play-again-btn'),
     
     // Disconnected screen
@@ -77,9 +94,45 @@ function showScreen(screenName) {
     screens[screenName].classList.remove('hidden');
 }
 
-// Check if user already has an avatar
-if (playerAvatar) {
-    socket.emit('setAvatar', playerAvatar);
+// Check if user already has profile
+if (playerAvatar && playerName) {
+    socket.emit('setProfile', { avatar: playerAvatar, name: playerName, gameMode: selectedGameMode });
+} else {
+    // Pre-fill saved name if exists
+    if (playerName) {
+        elements.playerNameInput.value = playerName;
+    }
+}
+
+function createConfetti() {
+    elements.confettiContainer.innerHTML = '';
+    for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + '%';
+        confetti.style.animationDelay = Math.random() * 3 + 's';
+        confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+        elements.confettiContainer.appendChild(confetti);
+    }
+    
+    setTimeout(() => {
+        elements.confettiContainer.innerHTML = '';
+    }, 5000);
+}
+
+function updateStats(won, choice) {
+    playerStats.gamesPlayed++;
+    if (won) {
+        playerStats.wins++;
+    } else {
+        playerStats.losses++;
+    }
+    
+    if (choice === 'rock') playerStats.rockCount++;
+    else if (choice === 'paper') playerStats.paperCount++;
+    else if (choice === 'scissors') playerStats.scissorsCount++;
+    
+    localStorage.setItem('playerStats', JSON.stringify(playerStats));
 }
 
 function resetGame() {
@@ -124,27 +177,50 @@ function startChoiceTimer() {
 }
 
 // Setup screen
+function checkProfileComplete() {
+    const name = elements.playerNameInput.value.trim();
+    if (name && playerAvatar) {
+        elements.selectedName.textContent = name;
+        elements.playerAvatarDisplay.textContent = playerAvatar;
+        elements.selectedProfile.classList.remove('hidden');
+    } else {
+        elements.selectedProfile.classList.add('hidden');
+    }
+}
+
+elements.playerNameInput.addEventListener('input', checkProfileComplete);
+
 elements.emojiButtons.forEach(btn => {
     btn.addEventListener('click', () => {
         elements.emojiButtons.forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
         playerAvatar = btn.dataset.emoji;
-        elements.playerAvatarDisplay.textContent = playerAvatar;
-        elements.selectedAvatar.classList.remove('hidden');
+        checkProfileComplete();
     });
 });
 
 elements.continueBtn.addEventListener('click', () => {
-    if (playerAvatar) {
+    const name = elements.playerNameInput.value.trim();
+    if (playerAvatar && name) {
+        playerName = name;
         localStorage.setItem('playerAvatar', playerAvatar);
-        socket.emit('setAvatar', playerAvatar);
+        localStorage.setItem('playerName', playerName);
+        socket.emit('setProfile', { avatar: playerAvatar, name: playerName, gameMode: selectedGameMode });
     }
 });
 
 // Lobby screen
+elements.modeButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        elements.modeButtons.forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedGameMode = btn.dataset.mode;
+    });
+});
+
 elements.findGameBtn.addEventListener('click', () => {
     showScreen('waiting');
-    socket.emit('findGame');
+    socket.emit('findGame', { gameMode: selectedGameMode });
 });
 
 elements.createRoomBtn.addEventListener('click', () => {
@@ -214,10 +290,10 @@ elements.playAgainBtn.addEventListener('click', resetGame);
 elements.returnHomeBtn.addEventListener('click', resetGame);
 
 // Socket events
-socket.on('avatarSet', (data) => {
+socket.on('profileSet', (data) => {
     playerId = data.id;
     elements.lobbyPlayerAvatar.textContent = playerAvatar;
-    elements.playerIdDisplay.textContent = `Player ID: ${data.id.substring(0, 6)}`;
+    elements.lobbyPlayerName.textContent = playerName;
     showScreen('lobby');
 });
 
@@ -280,7 +356,13 @@ socket.on('gameFound', (game) => {
     const opponent = game.players.find(p => p.id !== socket.id);
     
     elements.gamePlayerAvatar.textContent = playerAvatar;
+    elements.gamePlayerName.textContent = playerName;
     elements.gameOpponentAvatar.textContent = opponent.avatar;
+    elements.gameOpponentName.textContent = opponent.name;
+    
+    // Update game mode display
+    const modeText = game.gameMode === 'sudden' ? 'Sudden Death!' : `First to ${Math.ceil(parseInt(game.gameMode)/2)} wins!`;
+    document.querySelector('.round-info p:last-child').textContent = modeText;
     
     showScreen('game');
     elements.waitingForOpponent.classList.add('hidden');

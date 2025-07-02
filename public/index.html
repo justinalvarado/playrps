@@ -11,23 +11,33 @@
         <h1>Rock Paper Scissors</h1>
         
         <div id="setup-screen" class="screen">
-            <h2>Choose Your Avatar</h2>
-            <div class="emoji-grid">
-                <button class="emoji-btn" data-emoji="😊">😊</button>
-                <button class="emoji-btn" data-emoji="😎">😎</button>
-                <button class="emoji-btn" data-emoji="🤖">🤖</button>
-                <button class="emoji-btn" data-emoji="👽">👽</button>
-                <button class="emoji-btn" data-emoji="🦄">🦄</button>
-                <button class="emoji-btn" data-emoji="🐸">🐸</button>
-                <button class="emoji-btn" data-emoji="🦁">🦁</button>
-                <button class="emoji-btn" data-emoji="🐼">🐼</button>
-                <button class="emoji-btn" data-emoji="🦊">🦊</button>
-                <button class="emoji-btn" data-emoji="🐵">🐵</button>
-                <button class="emoji-btn" data-emoji="🐨">🐨</button>
-                <button class="emoji-btn" data-emoji="🎯">🎯</button>
+            <h2>Create Your Profile</h2>
+            
+            <div class="setup-section">
+                <h3>Your Name</h3>
+                <input type="text" id="player-name-input" placeholder="Enter your name" maxlength="12">
             </div>
-            <div id="selected-avatar" class="hidden">
-                <p>Your avatar: <span id="player-avatar"></span></p>
+            
+            <div class="setup-section">
+                <h3>Choose Your Avatar</h3>
+                <div class="emoji-grid">
+                    <button class="emoji-btn" data-emoji="😊">😊</button>
+                    <button class="emoji-btn" data-emoji="😎">😎</button>
+                    <button class="emoji-btn" data-emoji="🤖">🤖</button>
+                    <button class="emoji-btn" data-emoji="👽">👽</button>
+                    <button class="emoji-btn" data-emoji="🦄">🦄</button>
+                    <button class="emoji-btn" data-emoji="🐸">🐸</button>
+                    <button class="emoji-btn" data-emoji="🦁">🦁</button>
+                    <button class="emoji-btn" data-emoji="🐼">🐼</button>
+                    <button class="emoji-btn" data-emoji="🦊">🦊</button>
+                    <button class="emoji-btn" data-emoji="🐵">🐵</button>
+                    <button class="emoji-btn" data-emoji="🐨">🐨</button>
+                    <button class="emoji-btn" data-emoji="🎯">🎯</button>
+                </div>
+            </div>
+            
+            <div id="selected-profile" class="hidden">
+                <p><span id="player-avatar"></span> <span id="selected-name"></span></p>
                 <button id="continue-btn" class="btn btn-primary">Continue</button>
             </div>
         </div>
@@ -35,11 +45,20 @@
         <div id="lobby-screen" class="screen hidden">
             <div class="player-info">
                 <span id="lobby-player-avatar"></span>
-                <span id="player-id"></span>
-                <button id="edit-avatar-btn" class="btn btn-secondary">Change Avatar</button>
+                <span id="lobby-player-name"></span>
+                <button id="edit-profile-btn" class="btn btn-secondary">Edit Profile</button>
             </div>
             
             <div class="lobby-sections">
+                <div class="lobby-section">
+                    <h3>Game Mode</h3>
+                    <div class="game-mode-selector">
+                        <button class="mode-btn selected" data-mode="3">Best of 3</button>
+                        <button class="mode-btn" data-mode="5">Best of 5</button>
+                        <button class="mode-btn" data-mode="sudden">Sudden Death</button>
+                    </div>
+                </div>
+                
                 <div class="lobby-section">
                     <h3>Quick Match</h3>
                     <button id="find-game-btn" class="btn btn-primary">Find Random Opponent</button>
@@ -86,14 +105,14 @@
                     <div class="score-box">
                         <div class="player-display">
                             <span id="game-player-avatar"></span>
-                            <h3>You</h3>
+                            <h3 id="game-player-name">You</h3>
                         </div>
                         <span id="player-score">0</span>
                     </div>
                     <div class="score-box">
                         <div class="player-display">
                             <span id="game-opponent-avatar"></span>
-                            <h3>Opponent</h3>
+                            <h3 id="game-opponent-name">Opponent</h3>
                         </div>
                         <span id="opponent-score">0</span>
                     </div>
@@ -151,11 +170,15 @@
         </div>
 
         <div id="game-over-screen" class="screen hidden">
+            <div id="confetti-container"></div>
             <h2 id="game-result"></h2>
             <div class="final-scores">
                 <p>Final Score: <span id="final-player-score">0</span> - <span id="final-opponent-score">0</span></p>
             </div>
-            <button id="play-again-btn" class="btn btn-primary">Play Again</button>
+            <div class="game-over-actions">
+                <button id="rematch-btn" class="btn btn-primary">Rematch</button>
+                <button id="play-again-btn" class="btn btn-secondary">New Opponent</button>
+            </div>
         </div>
 
         <div id="disconnected-screen" class="screen hidden">
